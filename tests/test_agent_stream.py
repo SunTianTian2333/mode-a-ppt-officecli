@@ -8,10 +8,13 @@ from src.agent_runtime import AgentRunOptions, stream_agent
 
 
 class _FakeAgent:
-    def __init__(self, events: list[dict[str, Any]]) -> None:
+    def __init__(self, events: list[dict[str, Any]], *, captured: list | None = None) -> None:
         self._events = events
+        self._captured = captured
 
-    async def astream_events(self, _input: object, *, version: str = "v2"):
+    async def astream_events(self, input_payload: object, *, version: str = "v2"):
+        if self._captured is not None:
+            self._captured.append(input_payload)
         for event in self._events:
             yield event
 
@@ -51,3 +54,22 @@ async def test_stream_agent_quiet(capsys):
     await stream_agent(_FakeAgent(events), "hello", options=AgentRunOptions(quiet=True))
     out = capsys.readouterr().out
     assert out == ""
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_accepts_message_list():
+    captured: list = []
+    events = [
+        {
+            "event": "on_chain_end",
+            "data": {"output": {"messages": ["history"]}},
+        },
+    ]
+    history = ["m1", "m2"]
+    state = await stream_agent(
+        _FakeAgent(events, captured=captured),
+        history,
+        options=AgentRunOptions(quiet=True),
+    )
+    assert captured == [{"messages": history}]
+    assert state == {"messages": ["history"]}

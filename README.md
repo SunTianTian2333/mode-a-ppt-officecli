@@ -92,6 +92,10 @@ python -m src.main --verbose "做 3 页产品发布 PPT"
 
 # 仅打印最终回复
 python -m src.main --quiet "做 3 页产品发布 PPT"
+
+# 多轮 REPL（A-PPT-2：生成后可继续改第 N 页）
+python -m src.main --chat
+python -m src.main --chat --verbose
 ```
 
 Agent 整轮任务在 `officecli_tools_session()` 内运行，所有 tool call 共享一个 `officecli mcp` 子进程（支持 `open` 长会话编辑）。

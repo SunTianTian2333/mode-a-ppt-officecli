@@ -50,6 +50,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="User request for the PPT agent (omit for config smoke)",
     )
     parser.add_argument(
+        "--chat",
+        action="store_true",
+        help="Interactive multi-turn REPL",
+    )
+    parser.add_argument(
         "-v",
         "--verbose",
         action="store_true",
@@ -59,7 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
         "-q",
         "--quiet",
         action="store_true",
-        help="Only print the final assistant reply",
+        help="Only print the final assistant reply (single-turn)",
     )
     return parser
 
@@ -68,11 +73,20 @@ async def main_async(argv: list[str]) -> int:
     parser = build_parser()
     args = parser.parse_args(argv[1:])
 
-    if args.message:
-        from src.agent import run_ppt_agent
+    if args.chat and args.message:
+        print("  error: use either --chat or a one-shot message, not both", file=sys.stderr)
+        return 1
 
-        user_message = " ".join(args.message)
-        try:
+    try:
+        if args.chat:
+            from src.repl import run_ppt_chat
+
+            return await run_ppt_chat(verbose=args.verbose, quiet=args.quiet)
+
+        if args.message:
+            from src.agent import run_ppt_agent
+
+            user_message = " ".join(args.message)
             if not args.quiet:
                 print("mode-a-ppt-officecli · agent")
             reply = await run_ppt_agent(
@@ -82,9 +96,13 @@ async def main_async(argv: list[str]) -> int:
             )
             print(reply)
             return 0
-        except ValueError as exc:
-            print(f"  error: {exc}", file=sys.stderr)
-            return 1
+    except ValueError as exc:
+        print(f"  error: {exc}", file=sys.stderr)
+        return 1
+    except RuntimeError as exc:
+        print(f"  error: {exc}", file=sys.stderr)
+        return 1
+
     return run_config_smoke()
 
 

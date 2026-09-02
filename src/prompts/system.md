@@ -42,3 +42,10 @@
 - 路径含 `[N]` 时 shell 需引号：`'/slide[1]'`
 - 属性用 `--prop key=value`，不用 `--name`
 - 多步编辑同一文件优先 `batch`
+
+## 多轮对话（REPL）
+
+- 用户说「改第 N 页」「换标题」→ **open 已有 .pptx**，不要重新 create。
+- 同一 REPL 会话内、同一 deck：**不要重复 `load_skill`**。
+- 仅当用户明确要开始新 deck（或 `/new`）时，才 create 新文件并 `load_skill`。
+- 小改动（改标题/改一页）不必走完整 Delivery Gate；用户说「最终版/交付」时再 validate / save。

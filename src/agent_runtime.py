@@ -8,6 +8,8 @@ from typing import Any
 
 _SLOW_TOOL_MARKERS = ("load_skill", "screenshot", "validate")
 
+AgentMessages = str | list[Any]
+
 
 @dataclass
 class AgentRunOptions:
@@ -80,11 +82,14 @@ def _slow_hint(command: str) -> str:
 
 async def stream_agent(
     agent: Any,
-    user_message: str,
+    messages: AgentMessages,
     *,
     options: AgentRunOptions | None = None,
 ) -> dict[str, Any]:
-    """Run agent with progress logs; return final graph state."""
+    """Run agent with progress logs; return final graph state.
+
+    ``messages`` may be a single user string (one-shot CLI) or a full message list (REPL).
+    """
     opts = options or AgentRunOptions()
     if opts.verbose and opts.quiet:
         raise ValueError("cannot use --verbose and --quiet together")
@@ -93,9 +98,10 @@ async def stream_agent(
     turn = 0
     tool_count = 0
     final_state: dict[str, Any] | None = None
+    payload = {"messages": messages}
 
     async for event in agent.astream_events(
-        {"messages": user_message},
+        payload,
         version="v2",
     ):
         kind = event.get("event")
