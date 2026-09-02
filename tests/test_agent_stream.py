@@ -111,3 +111,26 @@ async def test_stream_agent_recursion_limit_error(monkeypatch):
 
     with pytest.raises(RuntimeError, match="Agent 步数达到上限 \\(50\\)"):
         await stream_agent(_LimitAgent(), "hello", options=AgentRunOptions(quiet=True))
+
+
+@pytest.mark.asyncio
+async def test_iter_agent_events_yields_normalized_events():
+    events = [
+        {"event": "on_chat_model_start", "data": {}},
+        {
+            "event": "on_tool_start",
+            "data": {"input": {"command": "officecli load_skill pptx"}},
+        },
+        {"event": "on_tool_end", "data": {"output": "ok"}},
+        {
+            "event": "on_chain_end",
+            "data": {"output": {"messages": ["done"]}},
+        },
+    ]
+
+    from src.agent_runtime import iter_agent_events
+
+    collected = [ev async for ev in iter_agent_events(_FakeAgent(events), "hello")]
+    kinds = [ev["type"] for ev in collected]
+    assert kinds == ["agent_turn", "tool_start", "tool_end", "complete"]
+    assert collected[-1]["final_state"] == {"messages": ["done"]}

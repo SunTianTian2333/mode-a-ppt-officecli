@@ -13,6 +13,7 @@ LangChain Agent + OfficeCLI MCP — 生成 PPT。
 | 2 | MCP Client | ✅ |
 | 3 | Skill 运行时 load + 路由 | ✅ |
 | 4 | create_agent + pptx | ✅ 代码就绪（需 OPENAI_API_KEY 跑 Demo） |
+| W-Web-1 | FastAPI + HTML 本地 Demo | ✅ 单轮 + SSE + 下载 |
 
 ## 环境
 
@@ -74,6 +75,7 @@ src/
 ├── skills.py        # 业务 skill（L2）匹配与注入
 ├── mcp_client.py    # MCP Client API（含 officecli_tools_session）
 ├── agent.py         # Step 4 Agent
+├── web/             # W-Web-1 FastAPI demo
 ├── config.py
 ├── prompts/system.md
 docs/                # 架构、边界、验收清单
@@ -107,6 +109,21 @@ Agent 整轮任务在 `officecli_tools_session()` 内运行，所有 tool call �
 ```bash
 python -m src.main
 ```
+
+## W-Web-1 · Web Demo
+
+```bash
+pip install -e ".[web]"
+python -m src.main --init-workspace   # 若尚未 init
+python -m src.main --web              # http://127.0.0.1:8765
+
+# 或直接 uvicorn
+uvicorn src.web.app:app --host 127.0.0.1 --port 8765
+```
+
+浏览器：输入需求 → SSE 实时进度 → 下载 `.ppt-agent/output/*.pptx`。单用户本地 Demo，API Key 仅服务端读取。
+
+可选环境变量：`PPT_RECURSION_LIMIT`（默认 `9999`，多页 PPT 生成步数上限）。
 
 ## 关联
 

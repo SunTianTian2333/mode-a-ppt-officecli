@@ -17,7 +17,7 @@ Created: 2026-09-02
 ## 非目标
 
 - LangGraph 验收图、RAG、多 Agent（后续 Spec）
-- Web UI、生产 OA 对接
+- 生产 Web / 多租户 / 公网部署（W-Web-1 仅本地 FastAPI Demo）
 - 修改 mini-harness-ts / dsh 上游
 
 ## 范围
@@ -34,6 +34,7 @@ Created: 2026-09-02
 | 2 | `mcp_client` + `mcp_smoke` + 测试 | ✅ |
 | 3 | Skill 路由 + 运行时 `load_skill`（非静态文件） | ✅ |
 | 4 | `create_agent` + CLI 入口 + 长 session | ✅ 代码；Demo 待 Key |
+| W-Web-1 | FastAPI + HTML 本地 Demo（单轮 SSE + 下载） | ✅ |
 
 技术栈：LangChain `create_agent` · `langchain-mcp-adapters` · DeepSeek API · OfficeCLI MCP。
 

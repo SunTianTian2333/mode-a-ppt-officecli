@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import Any
 
@@ -84,20 +85,16 @@ def _slow_hint(command: str) -> str:
     return ""
 
 
-async def stream_agent(
+async def iter_agent_events(
     agent: Any,
     messages: AgentMessages,
     *,
-    options: AgentRunOptions | None = None,
-) -> dict[str, Any]:
-    """Run agent with progress logs; return final graph state.
+    verbose: bool = False,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield normalized progress events from ``agent.astream_events``.
 
-    ``messages`` may be a single user string (one-shot CLI) or a full message list (REPL).
+    Final event is ``{"type": "complete", "final_state": ..., "tool_count": ..., "elapsed_s": ...}``.
     """
-    opts = options or AgentRunOptions()
-    if opts.verbose and opts.quiet:
-        raise ValueError("cannot use --verbose and --quiet together")
-
     started = time.monotonic()
     turn = 0
     tool_count = 0
@@ -116,27 +113,27 @@ async def stream_agent(
 
             if kind == "on_chat_model_start":
                 turn += 1
-                _log(f"[agent] turn {turn} · LLM…", quiet=opts.quiet)
+                yield {"type": "agent_turn", "turn": turn}
 
             elif kind == "on_tool_start":
                 tool_input = data.get("input")
                 command = format_tool_command(tool_input)
                 tool_count += 1
-                if opts.verbose:
-                    _log(f"[tool] {command}{_slow_hint(command)}", quiet=opts.quiet)
-                else:
-                    _log(
-                        f"[tool] {truncate_text(command, 120)}{_slow_hint(command)}",
-                        quiet=opts.quiet,
-                    )
+                yield {
+                    "type": "tool_start",
+                    "command": command,
+                    "index": tool_count,
+                    "slow": bool(_slow_hint(command)),
+                }
 
             elif kind == "on_tool_end":
-                if opts.quiet:
-                    continue
                 tool_output = data.get("output")
-                summary = format_tool_output(tool_output, verbose=opts.verbose)
-                prefix = "  → " if not opts.verbose else "  → output: "
-                _log(f"{prefix}{summary}", quiet=False)
+                summary = format_tool_output(tool_output, verbose=verbose)
+                yield {
+                    "type": "tool_end",
+                    "summary": summary,
+                    "index": tool_count,
+                }
 
             elif kind == "on_chain_end":
                 output = data.get("output")
@@ -150,11 +147,65 @@ async def stream_agent(
         ) from exc
 
     elapsed = time.monotonic() - started
+    if final_state is None:
+        raise RuntimeError("agent finished without messages in final state")
+
+    yield {
+        "type": "complete",
+        "final_state": final_state,
+        "tool_count": tool_count,
+        "elapsed_s": elapsed,
+    }
+
+
+async def stream_agent(
+    agent: Any,
+    messages: AgentMessages,
+    *,
+    options: AgentRunOptions | None = None,
+) -> dict[str, Any]:
+    """Run agent with progress logs; return final graph state.
+
+    ``messages`` may be a single user string (one-shot CLI) or a full message list (REPL).
+    """
+    opts = options or AgentRunOptions()
+    if opts.verbose and opts.quiet:
+        raise ValueError("cannot use --verbose and --quiet together")
+
+    final_state: dict[str, Any] | None = None
+    tool_count = 0
+    elapsed = 0.0
+
+    async for progress in iter_agent_events(agent, messages, verbose=opts.verbose):
+        if progress["type"] == "agent_turn":
+            _log(f"[agent] turn {progress['turn']} · LLM…", quiet=opts.quiet)
+
+        elif progress["type"] == "tool_start":
+            command = progress["command"]
+            slow = " (may take a while)" if progress.get("slow") else ""
+            if opts.verbose:
+                _log(f"[tool] {command}{slow}", quiet=opts.quiet)
+            else:
+                _log(
+                    f"[tool] {truncate_text(command, 120)}{slow}",
+                    quiet=opts.quiet,
+                )
+
+        elif progress["type"] == "tool_end":
+            if opts.quiet:
+                continue
+            summary = progress["summary"]
+            prefix = "  → " if not opts.verbose else "  → output: "
+            _log(f"{prefix}{summary}", quiet=False)
+
+        elif progress["type"] == "complete":
+            final_state = progress["final_state"]
+            tool_count = progress["tool_count"]
+            elapsed = progress["elapsed_s"]
+
     _log(
         f"[agent] done · {tool_count} tools · {elapsed:.1f}s",
         quiet=opts.quiet,
     )
-
-    if final_state is None:
-        raise RuntimeError("agent finished without messages in final state")
+    assert final_state is not None
     return final_state

@@ -94,7 +94,35 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Only print the final assistant reply (single-turn)",
     )
+    parser.add_argument(
+        "--web",
+        action="store_true",
+        help="Start FastAPI web demo (127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="Web server port (with --web)",
+    )
     return parser
+
+
+def run_web_server(*, port: int) -> int:
+    try:
+        import uvicorn
+    except ImportError as exc:
+        print("  error: install web deps: pip install -e \".[web]\"", file=sys.stderr)
+        raise SystemExit(1) from exc
+
+    print(f"mode-a-ppt-officecli · web demo · http://127.0.0.1:{port}")
+    uvicorn.run(
+        "src.web.app:app",
+        host="127.0.0.1",
+        port=port,
+        reload=False,
+    )
+    return 0
 
 
 async def main_async(argv: list[str]) -> int:
@@ -103,6 +131,12 @@ async def main_async(argv: list[str]) -> int:
 
     if args.init_workspace:
         return run_init_workspace()
+
+    if args.web:
+        if args.message or args.chat:
+            print("  error: --web cannot be combined with chat message flags", file=sys.stderr)
+            return 1
+        return run_web_server(port=args.port)
 
     if args.chat and args.message:
         print("  error: use either --chat or a one-shot message, not both", file=sys.stderr)

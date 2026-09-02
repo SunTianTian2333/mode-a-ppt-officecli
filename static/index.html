@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PPT Agent · OfficeCLI</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>PPT Agent</h1>
+    <p class="subtitle">LangChain + OfficeCLI MCP · 本地 Demo</p>
+  </header>
+
+  <main>
+    <section id="log-panel" aria-live="polite">
+      <h2>进度</h2>
+      <div id="log"></div>
+    </section>
+
+    <section id="prompt-panel">
+      <label for="prompt">描述你想要的 PPT</label>
+      <textarea id="prompt" rows="4" placeholder="例如：做一个 5 页 LangChain 教学 PPT"></textarea>
+      <div class="actions">
+        <button id="generate-btn" type="button">生成 PPT</button>
+        <button id="refresh-btn" type="button">刷新产物列表</button>
+      </div>
+    </section>
+
+    <section id="artifacts-panel">
+      <h2>产物</h2>
+      <ul id="artifacts"></ul>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

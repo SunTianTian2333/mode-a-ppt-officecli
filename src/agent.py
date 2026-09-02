@@ -7,7 +7,10 @@ from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
-from src.agent_runtime import AgentRunOptions, stream_agent
+from collections.abc import AsyncIterator
+from typing import Any
+
+from src.agent_runtime import AgentRunOptions, iter_agent_events, stream_agent
 from src.config import get_openai_settings, load_config
 from src.mcp_client import officecli_tools_session
 from src.prompts.loader import build_system_prompt
@@ -35,6 +38,24 @@ def extract_final_text(result: object) -> str:
             if isinstance(msg, AIMessage) and msg.content:
                 return str(msg.content)
     return str(result)
+
+
+async def run_ppt_agent_stream(user_message: str) -> AsyncIterator[dict[str, Any]]:
+    """Yield normalized agent progress events for Web SSE (W-Web-1)."""
+    load_config()
+    settings = get_openai_settings()
+    if not settings["api_key"]:
+        raise ValueError("OPENAI_API_KEY not set")
+
+    system = build_system_prompt(user_message=user_message)
+
+    async with officecli_tools_session() as tools:
+        agent = build_agent(tools, system_prompt=system)
+        async for event in iter_agent_events(agent, user_message):
+            if event["type"] == "complete":
+                text = extract_final_text(event["final_state"])
+                yield {"type": "assistant", "text": text}
+            yield event
 
 
 async def run_ppt_agent(
