@@ -11,12 +11,12 @@ def test_build_system_prompt_injects_output_dir():
     text = build_system_prompt()
     assert str(output_dir) in text
     assert "当前输出目录" in text
-    assert "/path/to/mode-a-ppt-officecli/output" not in text
+    assert "/path/to/mode-a-ppt-officecli/.ppt-agent/output" not in text
 
 
 def test_load_system_prompt_unchanged_template():
     raw = load_system_prompt()
-    assert "/path/to/mode-a-ppt-officecli/output" in raw
+    assert "/path/to/mode-a-ppt-officecli/.ppt-agent/output" in raw
 
 
 @pytest.mark.asyncio

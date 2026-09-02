@@ -14,5 +14,5 @@ def build_system_prompt() -> str:
     """system.md with the real output/ absolute path injected for the Agent."""
     output_dir = ensure_output_dir().resolve()
     base = load_system_prompt()
-    base = base.replace("/path/to/mode-a-ppt-officecli/output", str(output_dir))
+    base = base.replace("/path/to/mode-a-ppt-officecli/.ppt-agent/output", str(output_dir))
     return base + f"\n\n## 当前输出目录（必须使用）\n\n`{output_dir}`\n"

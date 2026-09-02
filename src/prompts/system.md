@@ -4,8 +4,8 @@
 
 ## 输出路径
 
-- 所有 `.pptx` 使用**绝对路径**，写入项目 `output/` 目录。
-- 示例：`officecli create /path/to/mode-a-ppt-officecli/output/deck.pptx`
+- 所有 `.pptx` 使用**绝对路径**，写入工作区 `output/` 目录（默认 `.ppt-agent/output/`）。
+- 示例：`officecli create /path/to/mode-a-ppt-officecli/.ppt-agent/output/deck.pptx`
 
 ## Skill 路由（修改 pptx 之前必做）
 

@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import pytest
 
-from src.config import KNOWLEDGE_DIR, PROMPTS_DIR
+from src.config import PROMPTS_DIR
 from src.mcp_client import call_officecli, get_officecli_tools
 from src.prompts.loader import load_system_prompt
+from src.workspace import ensure_workspace, get_skills_dir
 
 
 def test_system_prompt_has_skill_routing():
@@ -16,9 +17,9 @@ def test_system_prompt_has_skill_routing():
     assert "未 `load_skill`" in text or "未 load_skill" in text
 
 
-def test_knowledge_dir_no_static_pptx_skill():
-    assert not (KNOWLEDGE_DIR / "pptx_skill.md").exists()
-    assert (KNOWLEDGE_DIR / "README.md").is_file()
+def test_skills_dir_no_static_pptx_skill():
+    ensure_workspace()
+    assert not (get_skills_dir() / "pptx_skill.md").exists()
 
 
 def test_system_md_exists():

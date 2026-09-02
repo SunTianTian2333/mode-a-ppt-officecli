@@ -75,7 +75,6 @@ src/
 ├── agent.py         # Step 4 Agent
 ├── config.py
 ├── prompts/system.md
-└── knowledge/README.md   # Skill 运行时 load，无静态文件
 docs/                # 架构、边界、验收清单
 .ppt-agent/          # 运行时工作区（gitignore）：.env / output / memory …
 .ppt-agent.example/  # 工作区模板（git）

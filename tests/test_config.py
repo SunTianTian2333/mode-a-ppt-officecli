@@ -6,7 +6,6 @@ import pytest
 
 from src.config import (
     PROJECT_ROOT,
-    KNOWLEDGE_DIR,
     PROMPTS_DIR,
     get_officecli_bin,
     get_output_dir,
@@ -17,7 +16,7 @@ from src.config import (
 def test_project_layout():
     assert (PROJECT_ROOT / "pyproject.toml").is_file()
     assert (PROMPTS_DIR / "system.md").is_file()
-    assert (KNOWLEDGE_DIR / "README.md").is_file()
+    assert (PROJECT_ROOT / ".ppt-agent.example").is_dir()
 
 
 def test_officecli_bin_exists():

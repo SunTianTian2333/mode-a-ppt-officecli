@@ -7,7 +7,6 @@ from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
-KNOWLEDGE_DIR = Path(__file__).resolve().parent / "knowledge"
 
 # Shell / IDE prompt vars — not needed by officecli mcp; may trigger adapter warnings.
 _MCP_ENV_DROP: frozenset[str] = frozenset(
