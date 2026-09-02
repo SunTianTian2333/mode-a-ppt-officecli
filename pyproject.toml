@@ -1,0 +1,29 @@
+[project]
+name = "mode-a-ppt-officecli"
+version = "0.1.0"
+description = "LangChain Agent + OfficeCLI MCP for PPT generation"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "langchain>=0.3",
+    "langchain-openai>=0.3",
+    "langchain-mcp-adapters>=0.1",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
