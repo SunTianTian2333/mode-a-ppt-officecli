@@ -203,6 +203,11 @@ async function refreshArtifacts() {
   renderArtifacts(data.files ?? []);
 }
 
+function clearPrompt() {
+  promptEl.value = "";
+  promptEl.style.height = "auto";
+}
+
 async function generatePpt() {
   const message = promptEl.value.trim();
   if (!message) return;
@@ -210,6 +215,7 @@ async function generatePpt() {
   generateBtn.disabled = true;
   resetProgress();
   appendMessage("user", message, "You");
+  clearPrompt();
 
   try {
     const res = await fetch("/api/chat", {
