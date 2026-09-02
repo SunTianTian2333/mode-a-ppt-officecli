@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import sys
 
@@ -9,7 +10,6 @@ from src.config import (
     ensure_output_dir,
     get_officecli_bin,
     get_openai_settings,
-    get_output_dir,
     load_config,
     officecli_version,
 )
@@ -40,14 +40,46 @@ def run_config_smoke() -> int:
     return 0
 
 
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="LangChain Agent + OfficeCLI MCP for PPT generation",
+    )
+    parser.add_argument(
+        "message",
+        nargs="*",
+        help="User request for the PPT agent (omit for config smoke)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Verbose tool progress output",
+    )
+    parser.add_argument(
+        "-q",
+        "--quiet",
+        action="store_true",
+        help="Only print the final assistant reply",
+    )
+    return parser
+
+
 async def main_async(argv: list[str]) -> int:
-    if len(argv) > 1:
+    parser = build_parser()
+    args = parser.parse_args(argv[1:])
+
+    if args.message:
         from src.agent import run_ppt_agent
 
-        user_message = " ".join(argv[1:])
+        user_message = " ".join(args.message)
         try:
-            print("mode-a-ppt-officecli · agent")
-            reply = await run_ppt_agent(user_message)
+            if not args.quiet:
+                print("mode-a-ppt-officecli · agent")
+            reply = await run_ppt_agent(
+                user_message,
+                verbose=args.verbose,
+                quiet=args.quiet,
+            )
             print(reply)
             return 0
         except ValueError as exc:

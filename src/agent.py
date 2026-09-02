@@ -7,6 +7,7 @@ from langchain_core.messages import AIMessage
 from langchain_core.tools import BaseTool
 from langchain_openai import ChatOpenAI
 
+from src.agent_runtime import AgentRunOptions, stream_agent
 from src.config import get_openai_settings, load_config
 from src.mcp_client import officecli_tools_session
 from src.prompts.loader import build_system_prompt
@@ -36,16 +37,24 @@ def extract_final_text(result: object) -> str:
     return str(result)
 
 
-async def run_ppt_agent(user_message: str) -> str:
+async def run_ppt_agent(
+    user_message: str,
+    *,
+    verbose: bool = False,
+    quiet: bool = False,
+) -> str:
     """Run one PPT task; MCP session lives for the entire agent loop."""
     load_config()
     settings = get_openai_settings()
     if not settings["api_key"]:
         raise ValueError("OPENAI_API_KEY not set")
+    if verbose and quiet:
+        raise ValueError("cannot use --verbose and --quiet together")
 
     system = build_system_prompt()
+    options = AgentRunOptions(verbose=verbose, quiet=quiet)
 
     async with officecli_tools_session() as tools:
         agent = build_agent(tools, system_prompt=system)
-        result = await agent.ainvoke({"messages": user_message})
+        result = await stream_agent(agent, user_message, options=options)
         return extract_final_text(result)

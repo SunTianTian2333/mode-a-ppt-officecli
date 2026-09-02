@@ -86,6 +86,12 @@ output/              # pptx 产物（gitignore）
 ```bash
 # 需 .env 中 OPENAI_API_KEY
 python -m src.main "做 3 页产品发布 PPT"
+
+# 更详细的 tool 进度
+python -m src.main --verbose "做 3 页产品发布 PPT"
+
+# 仅打印最终回复
+python -m src.main --quiet "做 3 页产品发布 PPT"
 ```
 
 Agent 整轮任务在 `officecli_tools_session()` 内运行，所有 tool call 共享一个 `officecli mcp` 子进程（支持 `open` 长会话编辑）。
