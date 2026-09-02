@@ -51,7 +51,7 @@ async def run_ppt_agent(
     if verbose and quiet:
         raise ValueError("cannot use --verbose and --quiet together")
 
-    system = build_system_prompt()
+    system = build_system_prompt(user_message=user_message)
     options = AgentRunOptions(verbose=verbose, quiet=quiet)
 
     async with officecli_tools_session() as tools:

@@ -4,17 +4,20 @@ import pytest
 
 from src.config import PROMPTS_DIR
 from src.mcp_client import call_officecli, get_officecli_tools
-from src.prompts.loader import load_system_prompt
+from src.prompts.loader import build_system_prompt, load_system_prompt
 from src.workspace import ensure_workspace, get_skills_dir
 
 
-def test_system_prompt_has_skill_routing():
+def test_system_prompt_mentions_load_skill_flow():
     text = load_system_prompt()
-    assert "Skill 路由" in text
     assert "load_skill" in text
-    assert "pitch-deck" in text
-    assert "pptx" in text
-    assert "未 `load_skill`" in text or "未 load_skill" in text
+    assert "officecli" in text
+
+
+def test_build_system_prompt_includes_capability_via_business_skill():
+    text = build_system_prompt(user_message="做 PPT")
+    assert "capability_skills" in text
+    assert "`pptx`" in text
 
 
 def test_skills_dir_no_static_pptx_skill():

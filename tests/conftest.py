@@ -22,3 +22,7 @@ def isolated_workspace(tmp_path, monkeypatch):
         _real_load(path, override=override)
 
     monkeypatch.setattr(config_mod, "_load_env_file", _load_env_file)
+
+    from src.workspace import seed_business_skills_from_example
+
+    seed_business_skills_from_example()

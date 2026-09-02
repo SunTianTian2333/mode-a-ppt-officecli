@@ -8,7 +8,7 @@
 ├── output/        ← pptx 产物
 ├── sessions/      ← W2：会话持久化
 ├── memory/        ← W3：持久记忆
-├── skills/        ← W4：项目级扩展 skill
+├── skills/        ← W4：业务 skill（L2）；能力 skill 仍 runtime load_skill
 ├── cache/         ← W4：load_skill 缓存
 └── transcripts/   ← 可选：大 tool 输出归档
 ```

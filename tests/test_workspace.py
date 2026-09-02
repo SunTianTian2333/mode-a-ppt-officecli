@@ -29,6 +29,7 @@ def test_init_workspace_creates_env(tmp_path, monkeypatch):
     root = init_workspace(copy_env=True)
     assert root == ws.resolve()
     assert (root / ".env").is_file()
+    assert (root / "skills" / "business-ppt" / "SKILL.md").is_file()
 
 
 def test_output_dir_override_absolute(tmp_path, monkeypatch):

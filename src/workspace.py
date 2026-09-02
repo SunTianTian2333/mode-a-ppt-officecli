@@ -75,6 +75,23 @@ def ensure_workspace() -> Path:
     return root
 
 
+def seed_business_skills_from_example() -> None:
+    """Copy `.ppt-agent.example/skills/` into workspace when missing."""
+    example_skills = WORKSPACE_EXAMPLE_DIR / "skills"
+    target = get_skills_dir()
+    target.mkdir(parents=True, exist_ok=True)
+    if not example_skills.is_dir():
+        return
+    for entry in example_skills.iterdir():
+        dest = target / entry.name
+        if entry.is_dir():
+            if dest.exists():
+                continue
+            shutil.copytree(entry, dest)
+        elif entry.is_file() and not dest.exists():
+            shutil.copy(entry, dest)
+
+
 def init_workspace(*, copy_env: bool = True) -> Path:
     """Create `.ppt-agent/` tree; optionally seed `.env` from example."""
     root = ensure_workspace()
@@ -84,6 +101,7 @@ def init_workspace(*, copy_env: bool = True) -> Path:
     if copy_env and not env_path.is_file() and example_env.is_file():
         shutil.copy(example_env, env_path)
 
+    seed_business_skills_from_example()
     return root
 
 

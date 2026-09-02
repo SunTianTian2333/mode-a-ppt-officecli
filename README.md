@@ -71,6 +71,7 @@ src/
 ├── main.py          # config smoke / Agent CLI
 ├── mcp_smoke.py     # MCP smoke
 ├── skill_smoke.py   # Step 3 load_skill smoke
+├── skills.py        # 业务 skill（L2）匹配与注入
 ├── mcp_client.py    # MCP Client API（含 officecli_tools_session）
 ├── agent.py         # Step 4 Agent
 ├── config.py
