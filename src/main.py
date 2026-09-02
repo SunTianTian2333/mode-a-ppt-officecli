@@ -125,19 +125,7 @@ def run_web_server(*, port: int) -> int:
     return 0
 
 
-async def main_async(argv: list[str]) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv[1:])
-
-    if args.init_workspace:
-        return run_init_workspace()
-
-    if args.web:
-        if args.message or args.chat:
-            print("  error: --web cannot be combined with chat message flags", file=sys.stderr)
-            return 1
-        return run_web_server(port=args.port)
-
+async def main_async(args: argparse.Namespace) -> int:
     if args.chat and args.message:
         print("  error: use either --chat or a one-shot message, not both", file=sys.stderr)
         return 1
@@ -172,7 +160,22 @@ async def main_async(argv: list[str]) -> int:
 
 
 def main() -> int:
-    return asyncio.run(main_async(sys.argv))
+    parser = build_parser()
+    args = parser.parse_args(sys.argv[1:])
+
+    if args.init_workspace:
+        return run_init_workspace()
+
+    if args.web:
+        if args.message or args.chat:
+            print("  error: --web cannot be combined with chat message flags", file=sys.stderr)
+            return 1
+        return run_web_server(port=args.port)
+
+    if args.chat or args.message:
+        return asyncio.run(main_async(args))
+
+    return run_config_smoke()
 
 
 if __name__ == "__main__":
