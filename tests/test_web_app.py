@@ -28,7 +28,7 @@ async def test_index_and_static():
 
         css = await client.get("/static/style.css")
         assert css.status_code == 200
-        assert "color-scheme" in css.text
+        assert "--purple-600" in css.text
 
 
 @pytest.mark.asyncio

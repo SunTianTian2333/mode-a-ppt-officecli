@@ -3,35 +3,74 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PPT Agent · OfficeCLI</title>
+  <title>PPT Agent</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-  <header>
-    <h1>PPT Agent</h1>
-    <p class="subtitle">LangChain + OfficeCLI MCP · 本地 Demo</p>
-  </header>
-
-  <main>
-    <section id="log-panel" aria-live="polite">
-      <h2>进度</h2>
-      <div id="log"></div>
-    </section>
-
-    <section id="prompt-panel">
-      <label for="prompt">描述你想要的 PPT</label>
-      <textarea id="prompt" rows="4" placeholder="例如：做一个 5 页 LangChain 教学 PPT"></textarea>
-      <div class="actions">
-        <button id="generate-btn" type="button">生成 PPT</button>
-        <button id="refresh-btn" type="button">刷新产物列表</button>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <rect x="3" y="3" width="18" height="18" rx="3"/>
+            <path d="M8 8h8M8 12h6M8 16h4"/>
+          </svg>
+        </div>
+        <div>
+          <h1>PPT Agent</h1>
+          <p>OfficeCLI · 本地 Demo</p>
+        </div>
       </div>
-    </section>
 
-    <section id="artifacts-panel">
-      <h2>产物</h2>
-      <ul id="artifacts"></ul>
-    </section>
-  </main>
+      <div class="sidebar-section">
+        <div class="section-head">
+          <h2>产物</h2>
+          <button id="refresh-btn" type="button" class="ghost-btn" title="刷新">刷新</button>
+        </div>
+        <ul id="artifacts" class="artifact-list"></ul>
+      </div>
+    </aside>
+
+    <main class="chat-main">
+      <div id="chat" class="chat-messages" aria-live="polite">
+        <div class="empty-state" id="empty-state">
+          <div class="empty-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+              <path d="M5 19h14"/>
+            </svg>
+          </div>
+          <p class="empty-title">一句话生成 PPT</p>
+          <p class="empty-desc">描述主题和页数，Agent 会通过 OfficeCLI 生成并保存到本地。</p>
+        </div>
+      </div>
+
+      <div class="composer">
+        <div class="chips" id="example-chips">
+          <button type="button" class="chip" data-prompt="做一个 5 页 LangChain 教学 PPT，含架构图要点">LangChain 教学</button>
+          <button type="button" class="chip" data-prompt="做一个 3 页产品发布路演 PPT，简洁商务风">产品发布</button>
+          <button type="button" class="chip" data-prompt="做一个 4 页求职自我介绍 PPT">求职介绍</button>
+        </div>
+        <div class="input-row">
+          <textarea
+            id="prompt"
+            rows="1"
+            placeholder="描述你想要的 PPT…"
+            aria-label="PPT 需求"
+          ></textarea>
+          <button id="generate-btn" type="button" class="send-btn" aria-label="生成">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 19V5M5 12l7-7 7 7"/>
+            </svg>
+          </button>
+        </div>
+        <p class="composer-hint">Enter 发送 · Shift+Enter 换行</p>
+      </div>
+    </main>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>
