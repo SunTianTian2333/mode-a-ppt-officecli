@@ -6,6 +6,10 @@ import time
 from dataclasses import dataclass
 from typing import Any
 
+from langgraph.errors import GraphRecursionError
+
+from src.config import agent_run_config, get_recursion_limit
+
 _SLOW_TOOL_MARKERS = ("load_skill", "screenshot", "validate")
 
 AgentMessages = str | list[Any]
@@ -99,42 +103,51 @@ async def stream_agent(
     tool_count = 0
     final_state: dict[str, Any] | None = None
     payload = {"messages": messages}
+    config = agent_run_config()
 
-    async for event in agent.astream_events(
-        payload,
-        version="v2",
-    ):
-        kind = event.get("event")
-        data = event.get("data") or {}
+    try:
+        async for event in agent.astream_events(
+            payload,
+            config=config,
+            version="v2",
+        ):
+            kind = event.get("event")
+            data = event.get("data") or {}
 
-        if kind == "on_chat_model_start":
-            turn += 1
-            _log(f"[agent] turn {turn} · LLM…", quiet=opts.quiet)
+            if kind == "on_chat_model_start":
+                turn += 1
+                _log(f"[agent] turn {turn} · LLM…", quiet=opts.quiet)
 
-        elif kind == "on_tool_start":
-            tool_input = data.get("input")
-            command = format_tool_command(tool_input)
-            tool_count += 1
-            if opts.verbose:
-                _log(f"[tool] {command}{_slow_hint(command)}", quiet=opts.quiet)
-            else:
-                _log(
-                    f"[tool] {truncate_text(command, 120)}{_slow_hint(command)}",
-                    quiet=opts.quiet,
-                )
+            elif kind == "on_tool_start":
+                tool_input = data.get("input")
+                command = format_tool_command(tool_input)
+                tool_count += 1
+                if opts.verbose:
+                    _log(f"[tool] {command}{_slow_hint(command)}", quiet=opts.quiet)
+                else:
+                    _log(
+                        f"[tool] {truncate_text(command, 120)}{_slow_hint(command)}",
+                        quiet=opts.quiet,
+                    )
 
-        elif kind == "on_tool_end":
-            if opts.quiet:
-                continue
-            tool_output = data.get("output")
-            summary = format_tool_output(tool_output, verbose=opts.verbose)
-            prefix = "  → " if not opts.verbose else "  → output: "
-            _log(f"{prefix}{summary}", quiet=False)
+            elif kind == "on_tool_end":
+                if opts.quiet:
+                    continue
+                tool_output = data.get("output")
+                summary = format_tool_output(tool_output, verbose=opts.verbose)
+                prefix = "  → " if not opts.verbose else "  → output: "
+                _log(f"{prefix}{summary}", quiet=False)
 
-        elif kind == "on_chain_end":
-            output = data.get("output")
-            if isinstance(output, dict) and "messages" in output:
-                final_state = output
+            elif kind == "on_chain_end":
+                output = data.get("output")
+                if isinstance(output, dict) and "messages" in output:
+                    final_state = output
+    except GraphRecursionError as exc:
+        limit = get_recursion_limit()
+        raise RuntimeError(
+            f"Agent 步数达到上限 ({limit})。"
+            "可增大 PPT_RECURSION_LIMIT，或让 Agent 用 batch 合并 officecli 命令。"
+        ) from exc
 
     elapsed = time.monotonic() - started
     _log(

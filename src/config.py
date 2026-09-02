@@ -60,6 +60,25 @@ def load_config() -> None:
     _load_env_file(get_workspace_root() / ".env", override=True)
 
 
+DEFAULT_RECURSION_LIMIT = 9999
+
+
+def get_recursion_limit() -> int:
+    """LangGraph super-step cap for one agent run (crash guard, not a tight PPT budget)."""
+    raw = os.environ.get("PPT_RECURSION_LIMIT", str(DEFAULT_RECURSION_LIMIT))
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise ValueError(f"PPT_RECURSION_LIMIT must be an integer, got {raw!r}") from exc
+    if value < 1:
+        raise ValueError(f"PPT_RECURSION_LIMIT must be >= 1, got {value}")
+    return value
+
+
+def agent_run_config() -> dict[str, int]:
+    return {"recursion_limit": get_recursion_limit()}
+
+
 def get_openai_settings() -> dict[str, str]:
     return {
         "api_key": os.environ.get("OPENAI_API_KEY", ""),

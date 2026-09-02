@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from langgraph.errors import GraphRecursionError
 
 from src.agent_runtime import AgentRunOptions, stream_agent
 
@@ -12,9 +13,15 @@ class _FakeAgent:
         self._events = events
         self._captured = captured
 
-    async def astream_events(self, input_payload: object, *, version: str = "v2"):
+    async def astream_events(
+        self,
+        input_payload: object,
+        *,
+        version: str = "v2",
+        config: dict | None = None,
+    ):
         if self._captured is not None:
-            self._captured.append(input_payload)
+            self._captured.append({"payload": input_payload, "config": config})
         for event in self._events:
             yield event
 
@@ -71,5 +78,36 @@ async def test_stream_agent_accepts_message_list():
         history,
         options=AgentRunOptions(quiet=True),
     )
-    assert captured == [{"messages": history}]
+    assert captured == [{"payload": {"messages": history}, "config": {"recursion_limit": 9999}}]
     assert state == {"messages": ["history"]}
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_passes_recursion_limit(monkeypatch):
+    monkeypatch.setenv("PPT_RECURSION_LIMIT", "120")
+    captured: list = []
+    events = [
+        {
+            "event": "on_chain_end",
+            "data": {"output": {"messages": ["done"]}},
+        },
+    ]
+    await stream_agent(
+        _FakeAgent(events, captured=captured),
+        "hello",
+        options=AgentRunOptions(quiet=True),
+    )
+    assert captured[0]["config"] == {"recursion_limit": 120}
+
+
+@pytest.mark.asyncio
+async def test_stream_agent_recursion_limit_error(monkeypatch):
+    monkeypatch.setenv("PPT_RECURSION_LIMIT", "50")
+
+    class _LimitAgent:
+        async def astream_events(self, input_payload, *, version="v2", config=None):
+            raise GraphRecursionError("limit reached")
+            yield  # pragma: no cover
+
+    with pytest.raises(RuntimeError, match="Agent 步数达到上限 \\(50\\)"):
+        await stream_agent(_LimitAgent(), "hello", options=AgentRunOptions(quiet=True))

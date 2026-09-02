@@ -30,6 +30,22 @@ def test_mcp_connection_shape():
     assert conn["officecli"]["args"] == ["mcp"]
 
 
+def test_recursion_limit_default(monkeypatch):
+    from src.config import DEFAULT_RECURSION_LIMIT, agent_run_config, get_recursion_limit
+
+    monkeypatch.delenv("PPT_RECURSION_LIMIT", raising=False)
+    assert get_recursion_limit() == DEFAULT_RECURSION_LIMIT
+    assert agent_run_config() == {"recursion_limit": DEFAULT_RECURSION_LIMIT}
+
+
+def test_recursion_limit_env_override(monkeypatch):
+    from src.config import agent_run_config, get_recursion_limit
+
+    monkeypatch.setenv("PPT_RECURSION_LIMIT", "200")
+    assert get_recursion_limit() == 200
+    assert agent_run_config() == {"recursion_limit": 200}
+
+
 def test_output_dir_under_workspace():
     from src.workspace import get_workspace_root
 
