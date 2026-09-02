@@ -21,8 +21,9 @@ def test_load_system_prompt_unchanged_template():
 
 @pytest.mark.asyncio
 async def test_run_ppt_agent_requires_api_key(monkeypatch):
-    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "")
     load_config()
+    monkeypatch.setenv("OPENAI_API_KEY", "")
 
     from src.agent import run_ppt_agent
 
