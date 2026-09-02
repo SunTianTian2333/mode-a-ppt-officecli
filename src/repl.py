@@ -94,6 +94,11 @@ async def run_ppt_chat(*, verbose: bool = False, quiet: bool = False) -> int:
                     messages.pop()
                 print("\n[chat] round cancelled\n")
                 continue
+            except RuntimeError as exc:
+                if messages and isinstance(messages[-1], HumanMessage):
+                    messages.pop()
+                print(f"\n[chat] error: {exc}\n")
+                continue
 
             messages = list(state["messages"])
             reply = extract_final_text(state)
