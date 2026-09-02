@@ -31,7 +31,10 @@ def test_mcp_connection_shape():
     assert conn["officecli"]["args"] == ["mcp"]
 
 
-def test_output_dir_under_project():
+def test_output_dir_under_workspace():
+    from src.workspace import get_workspace_root
+
     out = get_output_dir()
+    ws = get_workspace_root()
     assert out.is_absolute()
-    assert PROJECT_ROOT in out.parents or out == PROJECT_ROOT / "output"
+    assert out.parent == ws

@@ -21,7 +21,8 @@ git clone https://github.com/SunTianTian2333/mode-a-ppt-officecli.git
 cd mode-a-ppt-officecli
 python3 -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-cp .env.example .env   # 填 OPENAI_API_KEY
+python -m src.main --init-workspace   # 创建 .ppt-agent/
+# 编辑 .ppt-agent/.env 填入 OPENAI_API_KEY
 ```
 
 依赖：OfficeCLI 已安装（`OFFICECLI_BIN`，默认 `~/.local/bin/officecli`）。
@@ -48,7 +49,7 @@ pytest -q
 mcp_smoke · step2
   tools=['officecli']
   version=1.0.146
-  file=.../output/step2-smoke.pptx
+  file=.../.ppt-agent/output/step2-smoke.pptx
   ready=step2
 ```
 
@@ -76,7 +77,8 @@ src/
 ├── prompts/system.md
 └── knowledge/README.md   # Skill 运行时 load，无静态文件
 docs/                # 架构、边界、验收清单
-output/              # pptx 产物（gitignore）
+.ppt-agent/          # 运行时工作区（gitignore）：.env / output / memory …
+.ppt-agent.example/  # 工作区模板（git）
 ```
 
 完整职责见 [架构.md](docs/架构.md)。

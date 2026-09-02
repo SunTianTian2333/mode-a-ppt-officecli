@@ -13,6 +13,7 @@ from src.config import (
     load_config,
     officecli_version,
 )
+from src.workspace import get_env_path, get_output_dir, get_workspace_root, init_workspace, migration_hints
 
 
 def run_config_smoke() -> int:
@@ -20,6 +21,7 @@ def run_config_smoke() -> int:
     settings = get_openai_settings()
     officecli_bin = get_officecli_bin()
     output_dir = ensure_output_dir()
+    workspace = get_workspace_root()
 
     has_api_key = bool(settings["api_key"])
     officecli_ok = officecli_bin.is_file()
@@ -31,12 +33,33 @@ def run_config_smoke() -> int:
     print(f"  api_key={'set' if has_api_key else 'NOT SET'}")
     print(f"  officecli={officecli_bin}")
     print(f"  officecli_version={version}")
+    print(f"  workspace={workspace}")
+    print(f"  env_file={get_env_path()}")
     print(f"  output={output_dir.resolve()}")
     print(f"  ready=step1")
+
+    for hint in migration_hints():
+        print(f"  hint: {hint}")
 
     if not officecli_ok:
         print("  error: officecli binary missing", file=sys.stderr)
         return 1
+    return 0
+
+
+def run_init_workspace() -> int:
+    root = init_workspace(copy_env=True)
+    print("mode-a-ppt-officecli · init workspace")
+    print(f"  workspace={root}")
+    print(f"  env={get_env_path()}")
+    print(f"  output={get_output_dir()}")
+    if get_env_path().is_file():
+        print("  env_status=ready (edit OPENAI_API_KEY)")
+    else:
+        print("  env_status=missing (copy .ppt-agent.example/.env.example)")
+    for hint in migration_hints():
+        print(f"  hint: {hint}")
+    print("  ready=workspace")
     return 0
 
 
@@ -48,6 +71,11 @@ def build_parser() -> argparse.ArgumentParser:
         "message",
         nargs="*",
         help="User request for the PPT agent (omit for config smoke)",
+    )
+    parser.add_argument(
+        "--init-workspace",
+        action="store_true",
+        help="Create .ppt-agent/ runtime workspace",
     )
     parser.add_argument(
         "--chat",
@@ -72,6 +100,9 @@ def build_parser() -> argparse.ArgumentParser:
 async def main_async(argv: list[str]) -> int:
     parser = build_parser()
     args = parser.parse_args(argv[1:])
+
+    if args.init_workspace:
+        return run_init_workspace()
 
     if args.chat and args.message:
         print("  error: use either --chat or a one-shot message, not both", file=sys.stderr)

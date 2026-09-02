@@ -5,8 +5,6 @@ import re
 import subprocess
 from pathlib import Path
 
-from dotenv import load_dotenv
-
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 KNOWLEDGE_DIR = Path(__file__).resolve().parent / "knowledge"
@@ -32,9 +30,35 @@ _MCP_ENV_DROP: frozenset[str] = frozenset(
 _BRACED_VAR_RE = re.compile(r"\$\{[^}]+\}")
 
 
+def _load_env_file(path: Path, *, override: bool = False) -> None:
+    """Load `.env`; when override=True, skip empty values so placeholders do not wipe legacy env."""
+    if not path.is_file():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#") or "=" not in stripped:
+            continue
+        key, _, value = stripped.partition("=")
+        key = key.strip()
+        if not key:
+            continue
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+            value = value[1:-1]
+        if override and not value:
+            continue
+        if not override and key in os.environ:
+            continue
+        os.environ[key] = value
+
+
 def load_config() -> None:
-    """Load .env from project root if present."""
-    load_dotenv(PROJECT_ROOT / ".env")
+    """Load env: legacy project `.env`, then `.ppt-agent/.env` (non-empty overrides)."""
+    from src.workspace import ensure_workspace, get_workspace_root
+
+    ensure_workspace()
+    _load_env_file(PROJECT_ROOT / ".env")
+    _load_env_file(get_workspace_root() / ".env", override=True)
 
 
 def get_openai_settings() -> dict[str, str]:
@@ -53,11 +77,9 @@ def get_officecli_bin() -> Path:
 
 
 def get_output_dir() -> Path:
-    raw = os.environ.get("PPT_OUTPUT_DIR", "output")
-    path = Path(raw)
-    if not path.is_absolute():
-        path = PROJECT_ROOT / path
-    return path
+    from src.workspace import get_output_dir as workspace_output_dir
+
+    return workspace_output_dir()
 
 
 def ensure_output_dir() -> Path:
